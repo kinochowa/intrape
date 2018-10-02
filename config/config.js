@@ -1,5 +1,5 @@
 module.exports = {
-  host: 'ns346276.ip-94-23-32.eu',
+  host: '127.0.0.1',
   database: 'intrape',
   username: 'root',
   password: 'Alain$01',

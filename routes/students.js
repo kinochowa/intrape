@@ -55,7 +55,7 @@ router.post('/import/:file_name', (req, res, next) => {
 				end = true;
 				res.status(400).json({error: 'House <' + student.house + '> does not exist', status: 400});
 			} else {
-				models.User.findOrCreate({where: {login: student.login, house: house.id}}).spread( (user, created) => {
+				models.User.findOrCreate({where: {login: student.login, House: house.id}}).spread( (user, created) => {
   					nbTodo--;
   					if (nbTodo == 0 && !end) {
   						res.status(200).json({status: 200});

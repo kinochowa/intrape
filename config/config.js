@@ -1,8 +1,8 @@
 module.exports = {
+  host: 'ns346276.ip-94-23-32.eu',
   database: 'intrape',
-  username: null,
-  password: null,
-  dialect: "sqlite",
-  storage: "./db.sqlite",
+  username: 'intrape',
+  password: '0809bast',
+  dialect: "mysql",
   operatorsAliases: false
 };

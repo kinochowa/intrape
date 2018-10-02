@@ -35,7 +35,7 @@ router.post('/import/:file_name', (req, res, next) => {
 	var stream = fs.createReadStream(csvfile);
 	var csvStream = new csv();
 	var nbTodo = 0;
-	var error = false;
+	var end = false;
 
 	csvStream.on("error", e => {
 		returnError(400, csvFile, e, res);
@@ -44,25 +44,35 @@ router.post('/import/:file_name', (req, res, next) => {
 	csvStream.on("data", data => {
 		nbTodo++;
 		var student = {
-			login: data[0]
+			login: data[0],
+			house: data[1]
 		};
 
-		models.User.findOrCreate({where: {login: student.login}}).spread( (user, created) => {
-  			console.log('user');
-  			console.log(user);
-  			console.log('created');
-  			console.log(created);
-  			nbTodo--;
-  			if (nbTodo == 0) {
-  				console.log('nbTodo = ' + nbTodo);
-  				res.status(200).json({status: 200});
-  			}
-  		}).catch( err => {
-  			if (!error) {
-  				error = true;
+		models.House.find({where: {name: student.house}}).then(house => {
+			if (house === null) {
+				console.log(student.house + ' n\'existe pas');
+
+				end = true;
+				res.status(400).json({error: 'House <' + student.house + '> does not exist', status: 400});
+			} else {
+				models.User.findOrCreate({where: {login: student.login, houseId: house.id}}).spread( (user, created) => {
+  					nbTodo--;
+  					if (nbTodo == 0 && !end) {
+  						res.status(200).json({status: 200});
+  					}
+  				}).catch( err => {
+  					if (!end) {
+  						end = true;
+ 						returnError(500, "sequelize error", err, res);
+ 					}
+  				});
+			}
+		}).catch(e => {
+			if (!end) {
+  				end = true;
  				returnError(500, "sequelize error", err, res);
  			}
-  		});
+		})
     });
 
 	stream.pipe(csvStream);

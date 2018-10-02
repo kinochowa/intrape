@@ -30,4 +30,6 @@ sequelize.sync();
 db.sequelize = sequelize;
 db.Sequelize = Sequelize;
 
+db.User.belongsTo(db.House);
+
 module.exports = db;

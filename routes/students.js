@@ -1,12 +1,20 @@
 var express = require('express');
 var router = express.Router();
 
+var models  = require('../models');
+
 var csv = require('fast-csv');
 var fs = require('fs');
 var path = require('path');
 var formidable = require('formidable');
 
 const FILE_DIR = __dirname + "/../public/files/";
+
+var returnError = (status, msg, err, res) => {
+	console.error(msg)
+	console.error(err);
+	res.status(status).json({status: status});
+}
 
 /*
 **
@@ -25,30 +33,40 @@ router.get('/import', (req, res, next) => {
 router.post('/import/:file_name', (req, res, next) => {
 	var csvfile =  FILE_DIR + req.params.file_name;
 	var stream = fs.createReadStream(csvfile);
-	var csvStream = new csv().on("error", e => {
-		console.error(csvfile + ': Error');
-		console.error(e);
-		res.status(400).json({status: 400, error: 'Can not read csv file.'});
-	}).on("data", data => { 
+	var csvStream = new csv();
+	var nbTodo = 0;
+	var error = false;
+
+	csvStream.on("error", e => {
+		returnError(400, csvFile, e, res);
+	});
+
+	csvStream.on("data", data => {
+		nbTodo++;
 		var student = {
 			login: data[0]
 		};
 
-		// TODO INSERT INTO DATABASE
-
-		console.log(student);
-    }).on("end", function() {
-    	res.status(200).json({status: 200});
+		models.User.findOrCreate({where: {login: student.login}}).spread( (user, created) => {
+  			console.log('user');
+  			console.log(user);
+  			console.log('created');
+  			console.log(created);
+  			nbTodo--;
+  			if (nbTodo == 0) {
+  				console.log('nbTodo = ' + nbTodo);
+  				res.status(200).json({status: 200});
+  			}
+  		}).catch( err => {
+  			if (!error) {
+  				error = true;
+ 				returnError(500, "sequelize error", err, res);
+ 			}
+  		});
     });
 
 	stream.pipe(csvStream);
 })
-
-var returnError = (status, msg, err, res) => {
-	console.error(msg)
-	console.error(err);
-	res.status(status).json({status: status});
-}
 
 /*
 **

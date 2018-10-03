@@ -27,7 +27,30 @@ router.get('/', (req, res, next) => {
 	}).catch(e => {
 		res.status(500).json({error: 'Error', status: 500});
 	})
-})
+});
+
+/*
+**
+**	ADD COMMENT TO A STUDENT
+**
+*/
+router.post(':login/comment', (req, res, next) => {
+	var comment = req.body.comment || null;
+	var login = req.query.login || null;
+
+	if (comment === null)
+		return returnError(400, "Comment is empty", null, res);
+	if (login === null)
+		return returnError(400, "Login is empty", null, res);
+
+	models.User.find({where: {login: login}}).then( user => {
+		if (user === null)
+			return returnError(400, "user <" + login + "> Does not exists", null, res);
+		models.Comment.create({comment: comment}).then( comment => { 
+	    	comment.setProperties([{user: user.id}]);
+		});
+	});
+});
 
 /*
 **

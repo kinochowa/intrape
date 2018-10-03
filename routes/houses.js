@@ -11,7 +11,7 @@ var returnError = (status, msg, err, res) => {
 
 /*
 **
-**	GET HOUSES' LIST
+**	GET HOUSES LIST
 **
 */
 router.get('/', (req, res, next) => {

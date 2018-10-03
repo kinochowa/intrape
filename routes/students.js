@@ -18,6 +18,19 @@ var returnError = (status, msg, err, res) => {
 
 /*
 **
+**	GET STUDENTS LIST
+**
+*/
+router.get('/', (req, res, next) => {
+	models.User.findAll().then(students => {
+		res.status(200).json({students: students, status: 200});
+	}).catch(e => {
+		res.status(500).json({error: 'Error', status: 500});
+	})
+})
+
+/*
+**
 **	GET IMPORT STUDENTS VIEW
 **
 */

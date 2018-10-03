@@ -1,4 +1,4 @@
 apps:
-  - scripts: app.js
+  - scripts: ./app.js
     env:
       NODE_ENV: production

@@ -25,6 +25,28 @@ var apiError = (status, errorType, res) => {
  * @api {get} /students/ Get students list
  * @apiName GetStudents
  * @apiGroup Students
+ *
+ * @apiSuccessExample Success-Response:
+ *     HTTP/1.1 200 OK
+ *     {
+ *       "students": [
+ *		 	{
+ *				"id"   : 1,
+ *				"login": "login@epitech.eu",
+ *				"House": {
+ *					id  : 1,
+ *					name: "House"
+ *				},
+ *				"Comments": [
+ *					{
+ *						id     : 1,
+ *						comment: "blah blah blah"
+ *					}
+ *				]
+ *		 	}
+ *		 ]
+ *     }
+ *     
  */
 router.get('/', (req, res, next) => {
 	models.User.findAll({include: [models.House, models.Comment]}).then(students => {
@@ -54,11 +76,7 @@ router.get('/', (req, res, next) => {
  *       "error" :  "StudentNotFound",
  *		 "status":  400
  *     }
- *     HTTP/1.1 500 Internal Server Error
- *     {
- *       "error" :  "ServerError",
- *		 "status":  500
- *     }
+ *
  */
 router.post('/:login/comment', (req, res, next) => {
 	var comment = req.body.comment || null;

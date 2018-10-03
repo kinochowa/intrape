@@ -9,11 +9,23 @@ var returnError = (status, msg, err, res) => {
 	res.status(status).json({status: status});
 }
 
-/*
-**
-**	GET HOUSES LIST
-**
-*/
+/**
+ * @api {get} /houses/ Get houses list
+ * @apiName GetHouses
+ * @apiGroup Houses
+ *
+ * @apiSuccessExample Success-Response:
+ *     HTTP/1.1 200 OK
+ *     {
+ *       "houses": [
+ *		 	{
+ 				id  : 1,
+ 				name: "House"
+ *			}
+ * 		  ]
+ *     }
+ *     
+ */
 router.get('/', (req, res, next) => {
 	models.House.findAll().then(houses => {
 		res.status(200).json({houses: houses, status: 200});
@@ -22,14 +34,25 @@ router.get('/', (req, res, next) => {
 	})
 });
 
-router.post('/add', (req, res, next) => {
+/**
+ * @api {post} /students/ Create new house
+ * @apiName CreateHouse
+ * @apiGroup Houses
+ *
+ * @apiSuccessExample Success-Response:
+ *     HTTP/1.1 201 OK
+ *     {
+ *     }
+ *
+ */
+router.post('/', (req, res, next) => {
 	var house_name = req.body.house_name || null;
 
 	if (house_name === null)
 		return res.status(400).json({error: 'house_name isn\'t specified', error: 400});
 
 	models.House.create({name: house_name}).then((house) => {
-		res.status(200).json({house: house, status: 200});
+		res.status(201).json({status: 201});
 	}).catch(e => {
 		console.error(e);
 		res.status(500).json({status: 500});

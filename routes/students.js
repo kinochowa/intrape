@@ -22,7 +22,7 @@ var returnError = (status, msg, err, res) => {
 **
 */
 router.get('/', (req, res, next) => {
-	models.User.findAll().then(students => {
+	models.User.findAll({include: [models.House]}).then(students => {
 		res.status(200).json({students: students, status: 200});
 	}).catch(e => {
 		res.status(500).json({error: 'Error', status: 500});

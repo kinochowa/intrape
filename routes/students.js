@@ -16,6 +16,11 @@ var returnError = (status, msg, err, res) => {
 	res.status(status).json({status: status});
 }
 
+var apiError = (status, errorType, res) => {
+	console.error(errorType);
+	res.status(status).json({error: errorType, status: status});
+}
+
 /**
  * @api {get} /students/ Get students list
  * @apiName GetStudents
@@ -25,31 +30,66 @@ router.get('/', (req, res, next) => {
 	models.User.findAll({include: [models.House, models.Comment]}).then(students => {
 		res.status(200).json({students: students, status: 200});
 	}).catch(e => {
+		console.error(e);
 		res.status(500).json({error: 'Error', status: 500});
 	})
 });
 
-/*
-**
-**	ADD COMMENT TO A STUDENT
-**
-*/
+/**
+ * @api {post} /students/:login/comment Add a comment to the specified user
+ * @apiName PostComment
+ * @apiGroup Students
+ *
+ * @apiParam {String} login Student unique login.
+ *
+ * @apiSuccessExample Success-Response:
+ *     HTTP/1.1 201 OK
+ *
+ * @apiError StudentNotFound The login does not exist.
+ * @apiError CommentNull The param <comment> can not be found in the body request.
+ *
+ * @apiErrorExample Error-Response:
+ *     HTTP/1.1 400 Bad Request
+ *     {
+ *       "error" :  "StudentNotFound",
+ *		 "status":  400
+ *     }
+ */
 router.post('/:login/comment', (req, res, next) => {
 	var comment = req.body.comment || null;
 	var login = req.params.login || null;
+	var result = false;
 
-	if (comment === null)
-		return returnError(400, "Comment is empty", null, res);
-	if (login === null)
-		return returnError(400, "Login is empty", null, res);
+	if (comment === null && !result) {
+		result = true;
+		return apiError(400, "CommentNull", res);
+	}
+		
 
 	models.User.find({where: {login: login}}).then( user => {
-		if (user === null)
-			return returnError(400, "user <" + login + "> Does not exists", null, res);
+		if (user === null && !result) {
+			result = true;
+			apiError(400, "StudentNotFound", res);
+		}
 		models.Comment.create({comment: comment}).then( comment => { 
 	    	comment.setUser(user.id);
-	    	res.status(201).json({status: 201});
+	    	if (!result) {
+	    		result = true;
+	    		res.status(201).json({status: 201});
+	    	}
+		}).catch(e => {
+			if (!result) {
+				result = true;
+				console.error(e);
+				apiError(500, "ServerError", res);
+			}
 		});
+	}).catch (e => {
+		if (!result) {
+				result = true;
+				console.error(e);
+				apiError(500, "ServerError", res);
+			}
 	});
 });
 

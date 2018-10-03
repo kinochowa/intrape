@@ -31,5 +31,7 @@ db.sequelize = sequelize;
 db.Sequelize = Sequelize;
 
 sequelize.models.User.belongsTo(sequelize.models.House);
+sequelize.models.Comment.belongsTo(sequelize.models.User);
+sequelize.models.User.hasMany(sequelize.models.Comment);
 
 module.exports = db;

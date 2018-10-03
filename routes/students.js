@@ -47,7 +47,8 @@ router.post('/:login/comment', (req, res, next) => {
 		if (user === null)
 			return returnError(400, "user <" + login + "> Does not exists", null, res);
 		models.Comment.create({comment: comment}).then( comment => { 
-	    	comment.setProperties([{user: user.id}]);
+	    	comment.setUser(user.id);
+	    	res.status(201).json({status: 201});
 		});
 	});
 });

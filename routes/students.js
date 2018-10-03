@@ -34,7 +34,7 @@ router.get('/', (req, res, next) => {
 **	ADD COMMENT TO A STUDENT
 **
 */
-router.post(':login/comment', (req, res, next) => {
+router.post('/:login/comment', (req, res, next) => {
 	var comment = req.body.comment || null;
 	var login = req.query.login || null;
 

@@ -16,11 +16,11 @@ var returnError = (status, msg, err, res) => {
 	res.status(status).json({status: status});
 }
 
-/*
-**
-**	GET STUDENTS LIST
-**
-*/
+/**
+ * @api {get} /students/ Get students list
+ * @apiName GetStudents
+ * @apiGroup Students
+ */
 router.get('/', (req, res, next) => {
 	models.User.findAll({include: [models.House, models.Comment]}).then(students => {
 		res.status(200).json({students: students, status: 200});

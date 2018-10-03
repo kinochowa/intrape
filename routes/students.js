@@ -54,6 +54,11 @@ router.get('/', (req, res, next) => {
  *       "error" :  "StudentNotFound",
  *		 "status":  400
  *     }
+ *     HTTP/1.1 500 Internal Server Error
+ *     {
+ *       "error" :  "ServerError",
+ *		 "status":  500
+ *     }
  */
 router.post('/:login/comment', (req, res, next) => {
 	var comment = req.body.comment || null;

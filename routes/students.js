@@ -36,7 +36,7 @@ router.get('/', (req, res, next) => {
 */
 router.post('/:login/comment', (req, res, next) => {
 	var comment = req.body.comment || null;
-	var login = req.query.login || null;
+	var login = req.params.login || null;
 
 	if (comment === null)
 		return returnError(400, "Comment is empty", null, res);

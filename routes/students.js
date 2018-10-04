@@ -128,10 +128,10 @@ const csvToDB = (stream) => new Promise((resolve, reject) => {
 	var csvStream = new csv();
 	var nbTodo = 0;
 	var end = false;
+	var listP = [];
 
 	csvStream.on("error", e => {
 		reject({status: 400, error: "ParseError: " + e});
-		//returnError(400, csvFile, e, res);
 	});
 
 	csvStream.on("data", data => {
@@ -140,37 +140,30 @@ const csvToDB = (stream) => new Promise((resolve, reject) => {
 			login: data[0],
 			house: data[1]
 		};
+		listP.push(models.House.find({where: {name: student.house}}));
+    });
 
-		models.House.find({where: {name: student.house}}).then(house => {
-			if (house === null) {
-				console.log(student.house + ' n\'existe pas');
+	csvStream.on("end", () => {
+		Promise.all(listP).then(houses => {
+			const housesNull = houses.filter(house => house == null);
 
-				end = true;
-				reject({status: 400, error: 'House <' + student.house + '> does not exist'});
-				//res.status(400).json({error: 'House <' + student.house + '> does not exist', status: 400});
-			} else {
+			if (housesNull.length == 0)
+				reject({status: 400, error: 'A house does not exist'});
+			
+			let nbToto = houses.length;
+			houses.foreach(house => {
 				models.User.findOrCreate({where: {login: student.login, HouseId: house.id}}).spread( (user, created) => {
   					nbTodo--;
-  					if (nbTodo == 0 && !end) {
+  					if (nbTodo == 0)
   						resolve(200);
-  						//res.status(200).json({status: 200});
-  					}
   				}).catch( err => {
-  					if (!end) {
-  						end = true;
- 						reject({status: 500, error: "sequelize error"});
- 						//returnError(500, "sequelize error", err, res);
- 					}
-  				});
-			}
+ 					reject({status: 500, error: "sequelize error"});
+  				});	
+			});
 		}).catch(e => {
-			if (!end) {
-  				end = true;
-  				reject({status: 500, error: "sequelize error"});
- 				//returnError(500, "sequelize error", err, res);
- 			}
+			reject({status: 500, error: "sequelize error"});
 		})
-    });
+	})
 
 	stream.pipe(csvStream);
 });

@@ -147,7 +147,7 @@ const csvToDB = (stream) => new Promise((resolve, reject) => {
 		Promise.all(listP).then(houses => {
 			const housesNull = houses.filter(house => house == null);
 
-			if (housesNull.length == 0)
+			if (housesNull.length != 0)
 				reject({status: 400, error: 'A house does not exist'});
 			
 			let nbToto = houses.length;

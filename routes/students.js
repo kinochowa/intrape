@@ -157,10 +157,12 @@ const csvToDB = (stream) => new Promise((resolve, reject) => {
   					if (nbTodo == 0)
   						resolve(200);
   				}).catch( err => {
+  					console.err('in findOrCreate', err);
  					reject({status: 500, error: "sequelize error"});
   				});	
 			});
 		}).catch(e => {
+			console.err('in find', err);
 			reject({status: 500, error: "sequelize error"});
 		})
 	})

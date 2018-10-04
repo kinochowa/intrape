@@ -140,19 +140,20 @@ const csvToDB = (stream) => new Promise((resolve, reject) => {
 			login: data[0],
 			house: data[1]
 		};
-		listP.push(models.House.find({where: {name: student.house}}));
+		listP.push(models.House.find({where: {name: student.house}}).then(house => new Promise((resolve, reject) => {
+			if (house == null)
+				reject({status: 400, error: 'A house <' + student.house + '> does not exist'});
+			else
+				resolve({student: student, house: house});
+		})));
     });
 
 	csvStream.on("end", () => {
-		Promise.all(listP).then(houses => {
-			const housesNull = houses.filter(house => house == null);
+		Promise.all(listP).then(objs => {
 
-			if (housesNull.length != 0)
-				reject({status: 400, error: 'A house does not exist'});
-			
-			let nbToto = houses.length;
-			houses.forEach(house => {
-				models.User.findOrCreate({where: {login: student.login, HouseId: house.id}}).spread( (user, created) => {
+			let nbToto = objs.length;
+			objs.forEach(obj => {
+				models.User.findOrCreate({where: {login: obj.student.login, HouseId: obj.house.id}}).spread( (user, created) => {
   					nbTodo--;
   					if (nbTodo == 0)
   						resolve(200);

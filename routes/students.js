@@ -148,17 +148,16 @@ const csvToDB = (stream) => new Promise((resolve, reject) => {
 		})));
     });
 
-	csvStream.on("end", () => {
-		Promise.all(listP).then(objs => {
-
+	csvStream.on("end", () => Promise.all(listP)
+		.then(objs => {
 			let nbToto = objs.length;
 			objs.forEach(obj => {
 				models.User.findOrCreate({where: {login: obj.student.login, HouseId: obj.house.id}}).spread( (user, created) => {
   					nbTodo--;
   					if (nbTodo == 0)
-  						resolve(200);
+	  					resolve(200);
   				}).catch( e => {
-  					console.error('in findOrCreate', e);
+	  				console.error('in findOrCreate', e);
  					reject({status: 500, error: "sequelize error"});
   				});	
 			});
@@ -166,7 +165,7 @@ const csvToDB = (stream) => new Promise((resolve, reject) => {
 			console.error('in find', e);
 			reject({status: 500, error: "sequelize error"});
 		})
-	})
+	);
 
 	stream.pipe(csvStream);
 });

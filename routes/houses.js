@@ -19,8 +19,8 @@ var returnError = (status, msg, err, res) => {
  *     {
  *       "houses": [
  *		 	{
- 				id  : 1,
- 				name: "House"
+ *				id  : 1,
+ *				name: "House"
  *			}
  * 		  ]
  *     }
@@ -32,6 +32,35 @@ router.get('/', (req, res, next) => {
 	}).catch(e => {
 		res.status(500).json({error: 'Error', status: 500});
 	})
+});
+
+/**
+ * @api {get} /houses/:house/students Get house students list
+ * @apiName GetHousesStudents
+ * @apiGroup Houses
+ *
+ * @apiParam {String} house House unique name.
+ *
+ * @apiSuccessExample Success-Response:
+ *     HTTP/1.1 200 OK
+ *     {
+ *       "houses": [
+ *		 	{
+ *				id  : 1,
+ *				name: "House",
+ *				students: [
+ *					{
+ *						id: 	1,
+ *						login:  "login@epitech.eu"
+ *					}
+ *				]
+ *			}
+ * 		  ]
+ *     }
+ *     
+ */
+router.get('/:house/students', (req, res, next) => {
+	// TODO
 });
 
 /**

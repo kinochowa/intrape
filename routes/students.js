@@ -58,6 +58,36 @@ router.get('/', (req, res, next) => {
 });
 
 /**
+ * @api {get} /students/:login Get student detail
+ * @apiName GetStudentDetail
+ * @apiGroup Students
+ *
+ *
+ * @apiParam {String} login Student unique login.
+ *
+ * @apiSuccessExample Success-Response:
+ *     HTTP/1.1 200 OK
+ *     {
+ *			"id"   : 1,
+ *			"login": "login@epitech.eu",
+ *			"House": {
+ *				id  : 1,
+ *				name: "House"
+ *			},
+ *			"Comments": [
+ *				{
+ *					id     : 1,
+ *					comment: "blah blah blah"
+ *				}
+ *			]
+ *     }
+ *     
+ */
+router.get('/students/:login', (req, res, next) => {
+	// TODO
+});
+
+/**
  * @api {post} /students/:login/comment Create comment
  * @apiName PostComment
  * @apiGroup Students

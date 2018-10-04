@@ -53,12 +53,12 @@ router.get('/', (req, res, next) => {
 		res.status(200).json({students: students, status: 200});
 	}).catch(e => {
 		console.error(e);
-		res.status(500).json({error: 'Error', status: 500});
+		apiError(500, "ServerError", res);
 	})
 });
 
 /**
- * @api {post} /students/:login/comment Add a comment to the specified user
+ * @api {post} /students/:login/comment Create comment
  * @apiName PostComment
  * @apiGroup Students
  *
@@ -125,20 +125,14 @@ router.get('/import', (req, res, next) => {
   res.render('students/import', {});
 });
 
-/*
-**
-** IMPORT NEW STUDENTS FROM CSV FILE
-** Param: fileName: csv file name
-*/
-router.post('/import/:file_name', (req, res, next) => {
-	var csvfile =  FILE_DIR + req.params.file_name;
-	var stream = fs.createReadStream(csvfile);
+const csvToDB = (stream) => new Promise((resolve, reject) => {
 	var csvStream = new csv();
 	var nbTodo = 0;
 	var end = false;
 
 	csvStream.on("error", e => {
-		returnError(400, csvFile, e, res);
+		reject({status: 400, error: "ParseError: " + e});
+		//returnError(400, csvFile, e, res);
 	});
 
 	csvStream.on("data", data => {
@@ -153,30 +147,49 @@ router.post('/import/:file_name', (req, res, next) => {
 				console.log(student.house + ' n\'existe pas');
 
 				end = true;
-				res.status(400).json({error: 'House <' + student.house + '> does not exist', status: 400});
+				reject({status: 400, error: 'House <' + student.house + '> does not exist'});
+				//res.status(400).json({error: 'House <' + student.house + '> does not exist', status: 400});
 			} else {
 				models.User.findOrCreate({where: {login: student.login, HouseId: house.id}}).spread( (user, created) => {
   					nbTodo--;
   					if (nbTodo == 0 && !end) {
-  						res.status(200).json({status: 200});
+  						resolve(200);
+  						//res.status(200).json({status: 200});
   					}
   				}).catch( err => {
   					if (!end) {
   						end = true;
- 						returnError(500, "sequelize error", err, res);
+ 						reject({status: 500, error: "sequelize error"});
+ 						//returnError(500, "sequelize error", err, res);
  					}
   				});
 			}
 		}).catch(e => {
 			if (!end) {
   				end = true;
- 				returnError(500, "sequelize error", err, res);
+  				reject({status: 500, error: "sequelize error"});
+ 				//returnError(500, "sequelize error", err, res);
  			}
 		})
     });
 
 	stream.pipe(csvStream);
-})
+});
+
+/*
+**
+** IMPORT NEW STUDENTS FROM CSV FILE
+** Param: fileName: csv file name
+*/
+router.post('/import/:file_name', (req, res, next) => {
+	var csvfile =  FILE_DIR + req.params.file_name;
+	var stream = fs.createReadStream(csvfile);
+	csvToDB(stream).then(ressult => {
+		res.status(result).json({status: result});
+	}).catch(e => {
+		returnError(e.status, e.error, null, res);
+	});
+});
 
 /*
 **

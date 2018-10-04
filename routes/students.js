@@ -10,16 +10,7 @@ var formidable = require('formidable');
 
 const FILE_DIR = __dirname + "/../public/files/";
 
-var returnError = (status, msg, err, res) => {
-	console.error(msg)
-	console.error(err);
-	res.status(status).json({status: status});
-}
-
-var apiError = (status, errorType, res) => {
-	console.error(errorType);
-	res.status(status).json({error: errorType, status: status});
-}
+var apiError = require('../error');
 
 /**
  * @api {get} /students/ Get students list
@@ -52,7 +43,6 @@ router.get('/', (req, res, next) => {
 	models.User.findAll({include: [models.House, models.Comment]}).then(students => {
 		res.status(200).json({students: students, status: 200});
 	}).catch(e => {
-		console.error(e);
 		apiError(500, "ServerError", res);
 	})
 });
@@ -83,8 +73,18 @@ router.get('/', (req, res, next) => {
  *     }
  *     
  */
-router.get('/students/:login', (req, res, next) => {
-	// TODO
+router.get('/:login', (req, res, next) => {
+	var login = req.params.login || null;
+
+	if (login == null)
+		return apiError(400, 'MissingParam', res);
+
+	models.User.find({where: {login: login}, include: [models.House, models.Comment]}).then( user => {
+		if (user === null)
+			apiError(400, "StudentNotFound", res);
+		else
+			res.status(200).json(user);
+	});	
 });
 
 /**
@@ -132,14 +132,12 @@ router.post('/:login/comment', (req, res, next) => {
 		}).catch(e => {
 			if (!result) {
 				result = true;
-				console.error(e);
 				apiError(500, "ServerError", res);
 			}
 		});
 	}).catch (e => {
 		if (!result) {
 				result = true;
-				console.error(e);
 				apiError(500, "ServerError", res);
 			}
 	});
@@ -187,13 +185,17 @@ const csvToDB = (stream) => new Promise((resolve, reject) => {
   					if (nbTodo == 0)
 	  					resolve(200);
   				}).catch( e => {
-	  				console.error('in findOrCreate', e);
- 					reject({status: 500, error: "sequelize error"});
+  					if (e.status)
+ 						reject({status: 500, error: "sequelize error"});
+ 					else
+ 						reject({status: 500, error: "sequelize error"});
   				});	
 			});
 		}).catch(e => {
-			console.error('in find', e);
-			reject({status: 500, error: "sequelize error"});
+			if (e.status)
+				reject(e);
+			else
+				reject({status: 500, error: "sequelize error"});
 		})
 	);
 
@@ -212,12 +214,9 @@ router.post('/import/:file_name', (req, res, next) => {
 		res.status(result).json({status: result});
 	}).catch(e => {
 		if (e.status)
-			returnError(e.status, e.error, null, res);
-		else {
-			console.error(e);
-			returnError(500, "ServerError", null, res);
-		}
-
+			apiError(e.status, e.error, res);
+		else
+			apiError(500, "ServerError", res);
 	});
 });
 
@@ -230,7 +229,7 @@ router.post('/upload', (req, res, next) => {
 	var form = new formidable.IncomingForm();
 	form.parse(req, (err, fields, files) => {
 		if (err || !files.file)
-			return returnError(500, "form.parse: Error", err, res);;
+			return apiError(500, 'ServerError', res);;
 
 		var old_path = files.file.path;
 		var file_ext = files.file.name.split('.').pop();
@@ -239,15 +238,15 @@ router.post('/upload', (req, res, next) => {
 
 		fs.readFile(old_path, (err, data) => {
 			if (err)
-				return returnError(500, "fs.readFile: Error", err, res);
+				return apiError(500, 'ServerError', res);
 
 			fs.writeFile(new_path, data, (err) => {
 				if (err)
-					return returnError(500, "fs.writeFile: Error", err, res);
+					return apiError(500, 'ServerError', res);
 
 				fs.unlink(old_path, (err) => {
 					if (err)
-						return returnError(500, "fs.unlink: Error", err, res);
+						apiError(500, 'ServerError', res);
 					else
 						res.status(200).json({file_name: file_name + '.' + file_ext, status: 200});
                 });

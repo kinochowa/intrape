@@ -42,6 +42,13 @@ app.use(function(err, req, res, next) {
 
 module.exports = app;
 
-app.listen(3000, function () {
-  console.log('Example app listening on port 3000!')
-})
+console.log(process.env.NODE_ENV);
+
+if (process.env.NODE_ENV == 'test')
+	app.listen(3001, function () {
+  		console.log('Example app listening on port 3001!')
+	})
+else
+	app.listen(3000, function () {
+  		console.log('Example app listening on port 3000!')
+	})

@@ -2,6 +2,7 @@ var express = require('express');
 var router = express.Router();
 
 var models  = require('../models');
+var apiError = require('../error');
 
 var returnError = (status, msg, err, res) => {
 	console.error(msg);
@@ -30,7 +31,7 @@ router.get('/', (req, res, next) => {
 	models.House.findAll().then(houses => {
 		res.status(200).json({houses: houses, status: 200});
 	}).catch(e => {
-		res.status(500).json({error: 'Error', status: 500});
+		apiError(500, 'ServerError', res);
 	})
 });
 
@@ -44,23 +45,39 @@ router.get('/', (req, res, next) => {
  * @apiSuccessExample Success-Response:
  *     HTTP/1.1 200 OK
  *     {
- *       "houses": [
- *		 	{
- *				id  : 1,
- *				name: "House",
- *				students: [
- *					{
- *						id: 	1,
- *						login:  "login@epitech.eu"
- *					}
- *				]
- *			}
- * 		  ]
+ *       "house": {
+ *			id  : 1,
+ *			name: "House",
+ *			students: [
+ *				{
+ *					id: 	1,
+ *					login:  "login@epitech.eu"
+ *				}
+ *			]
+ *		}
  *     }
  *     
  */
 router.get('/:house/students', (req, res, next) => {
-	// TODO
+	var house_name = req.params.house || null;
+
+	if (house_name === null)
+		return apiError(400, 'MissingParam', res);
+
+	models.House.find({ where: { name: house_name } }).then(house => {
+		if (house == null)
+			return apiError(400, 'HouseNotFound', res);
+		
+		models.User.findAll({where: {HouseId: house.id}}).then(users => {
+			house = house.toJSON();
+			house.students = users;
+			res.status(200).json({house: house});
+		}).catch(e => {
+			apiError(500, 'ServerError', res);
+		});
+	}).catch(e => {
+		apiError(500, 'ServerError', res);
+	});
 });
 
 /**
@@ -78,13 +95,12 @@ router.post('/', (req, res, next) => {
 	var house_name = req.body.house_name || null;
 
 	if (house_name === null)
-		return res.status(400).json({error: 'house_name isn\'t specified', error: 400});
+		return apiError(400, 'MissingParam', res);
 
 	models.House.create({name: house_name}).then((house) => {
 		res.status(201).json({status: 201});
 	}).catch(e => {
-		console.error(e);
-		res.status(500).json({status: 500});
+		apiError(500, 'ServerError', res);
 	})
 });
 

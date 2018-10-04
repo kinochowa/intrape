@@ -187,6 +187,7 @@ router.post('/import/:file_name', (req, res, next) => {
 	csvToDB(stream).then(ressult => {
 		res.status(result).json({status: result});
 	}).catch(e => {
+		console.log('=========>', e);
 		returnError(e.status, e.error, null, res);
 	});
 });

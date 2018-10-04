@@ -157,12 +157,12 @@ const csvToDB = (stream) => new Promise((resolve, reject) => {
   					if (nbTodo == 0)
   						resolve(200);
   				}).catch( e => {
-  					console.err('in findOrCreate', e);
+  					console.error('in findOrCreate', e);
  					reject({status: 500, error: "sequelize error"});
   				});	
 			});
 		}).catch(e => {
-			console.err('in find', e);
+			console.error('in find', e);
 			reject({status: 500, error: "sequelize error"});
 		})
 	})
@@ -184,7 +184,7 @@ router.post('/import/:file_name', (req, res, next) => {
 		if (e.status)
 			returnError(e.status, e.error, null, res);
 		else {
-			console.err(e);
+			console.error(e);
 			returnError(500, "ServerError", null, res);
 		}
 

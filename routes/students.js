@@ -87,7 +87,6 @@ router.post('/:login/comment', (req, res, next) => {
 		result = true;
 		return apiError(400, "CommentNull", res);
 	}
-		
 
 	models.User.find({where: {login: login}}).then( user => {
 		if (user === null && !result) {
@@ -184,11 +183,16 @@ const csvToDB = (stream) => new Promise((resolve, reject) => {
 router.post('/import/:file_name', (req, res, next) => {
 	var csvfile =  FILE_DIR + req.params.file_name;
 	var stream = fs.createReadStream(csvfile);
-	csvToDB(stream).then(ressult => {
+	csvToDB(stream).then(result => {
 		res.status(result).json({status: result});
 	}).catch(e => {
-		console.log('=========>', e);
-		returnError(e.status, e.error, null, res);
+		if (e.status)
+			returnError(e.status, e.error, null, res);
+		else {
+			console.err(e);
+			returnError(500, "ServerError", null, res);
+		}
+
 	});
 });
 

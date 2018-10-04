@@ -151,7 +151,7 @@ const csvToDB = (stream) => new Promise((resolve, reject) => {
 				reject({status: 400, error: 'A house does not exist'});
 			
 			let nbToto = houses.length;
-			houses.foreach(house => {
+			houses.forEach(house => {
 				models.User.findOrCreate({where: {login: student.login, HouseId: house.id}}).spread( (user, created) => {
   					nbTodo--;
   					if (nbTodo == 0)

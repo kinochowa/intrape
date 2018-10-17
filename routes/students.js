@@ -149,6 +149,7 @@ router.get('/import', (req, res, next) => {
 });
 
 const doesStudentExistsIntra = (login) => new Promise((resolve, reject) => {
+	console.log('AAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAA');
 	request.get({url: config.autologin + '/user/' + login + '?format=json'}, (err, res) => {
 		console.log('request:', config.autologin + '/user/' + login + '?format=json');
 		console.log('status code from intra :', res.statusCode);

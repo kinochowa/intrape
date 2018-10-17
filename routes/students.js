@@ -9,6 +9,8 @@ var path = require('path');
 var formidable = require('formidable');
 var request = require('request');
 
+var config = require(__dirname + '/../config/config.js')[process.env.NODE_ENV];
+
 const FILE_DIR = __dirname + "/../public/files/";
 
 var apiError = require('../error');

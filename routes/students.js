@@ -182,6 +182,7 @@ const csvToDB = (stream) => new Promise((resolve, reject) => {
 				doesStudentExistsIntra(student.login).then(() => {
 					resolve({student: student, house: house});
 				}).catch(e => {
+					console.error(e);
 					reject({status: 400, error: 'student <' + student.login + '> does not exist on the Intra'});
 				});
 			}

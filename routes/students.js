@@ -7,10 +7,12 @@ var csv = require('fast-csv');
 var fs = require('fs');
 var path = require('path');
 var formidable = require('formidable');
+var request = require('request');
 
 const FILE_DIR = __dirname + "/../public/files/";
 
 var apiError = require('../error');
+var apiResponse = require('../response');
 
 /**
  * @api {get} /students/ Get students list
@@ -41,14 +43,14 @@ var apiError = require('../error');
  */
 router.get('/', (req, res, next) => {
 	models.User.findAll({include: [models.House, models.Comment]}).then(students => {
-		res.status(200).json({students: students, status: 200});
+		apiResponse(res)({students: students, status: 200});
 	}).catch(e => {
-		apiError(500, "ServerError", res);
+		apiResponse(res)({status: 500, error: 'ServerError'});
 	})
 });
 
 /**
- * @api {get} /students/:login Get student detail
+ * @api {get} /students/:login/details Get student details
  * @apiName GetStudentDetail
  * @apiGroup Students
  *
@@ -73,7 +75,7 @@ router.get('/', (req, res, next) => {
  *     }
  *     
  */
-router.get('/:login', (req, res, next) => {
+router.get('/:login/details', (req, res, next) => {
 	var login = req.params.login || null;
 
 	if (login == null)
@@ -108,39 +110,32 @@ router.get('/:login', (req, res, next) => {
  *     }
  *
  */
+const createComment = async comment => {
+	if (!comment.comment)
+		reject({status: 400, error: 'CommentNull'});
+
+	const catchError = e => {
+		console.error(e);
+		throw new Error({staus: 500, error: 'ServerError'});
+	};
+
+	const user = await models.User.find({where: {login: comment.login}});
+	if (!user)
+		throw new Error({status: 400, error: 'UserNotFound'});
+
+	const com = await models.Comment.create({comment: comment.comment, date: new Date()}); 
+	com.setUser(user.id);
+	return ({status: 201});
+};
+
 router.post('/:login/comment', (req, res, next) => {
 	var comment = req.body.comment || null;
 	var login = req.params.login || null;
 	var result = false;
 
-	if (comment === null && !result) {
-		result = true;
-		return apiError(400, "CommentNull", res);
-	}
-
-	models.User.find({where: {login: login}}).then( user => {
-		if (user === null && !result) {
-			result = true;
-			apiError(400, "StudentNotFound", res);
-		}
-		models.Comment.create({comment: comment}).then( comment => { 
-	    	comment.setUser(user.id);
-	    	if (!result) {
-	    		result = true;
-	    		res.status(201).json({status: 201});
-	    	}
-		}).catch(e => {
-			if (!result) {
-				result = true;
-				apiError(500, "ServerError", res);
-			}
-		});
-	}).catch (e => {
-		if (!result) {
-				result = true;
-				apiError(500, "ServerError", res);
-			}
-	});
+	createComment({comment: comment, login: login})
+	.then(apiResponse(res))
+	.catch(apiResponse(res));
 });
 
 /*
@@ -149,7 +144,16 @@ router.post('/:login/comment', (req, res, next) => {
 **
 */
 router.get('/import', (req, res, next) => {
-  res.render('students/import', {});
+	console.log('.....................');
+  	res.render('students/import', {});
+});
+
+const doesStudentExistsIntra = (login) => new Promise((resolve, reject) => {
+	request.get({url: config.autologin + '/user/' + login + '?format=json'}, (err, res) => {
+		if (!error && response.statusCode == 200)
+			resolve();
+		reject();
+	})
 });
 
 const csvToDB = (stream) => new Promise((resolve, reject) => {
@@ -171,8 +175,13 @@ const csvToDB = (stream) => new Promise((resolve, reject) => {
 		listP.push(models.House.find({where: {name: student.house}}).then(house => new Promise((resolve, reject) => {
 			if (house == null)
 				reject({status: 400, error: 'A house <' + student.house + '> does not exist'});
-			else
-				resolve({student: student, house: house});
+			else {
+				doesStudentExistsIntra(student.login).then(() => {
+					resolve({student: student, house: house});
+				}).catch(e => {
+					reject({status: 400, error: 'student <' + student.login + '> does not exist on the Intra'});
+				});
+			}
 		})));
     });
 
